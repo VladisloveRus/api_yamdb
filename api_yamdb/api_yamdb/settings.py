@@ -23,6 +23,8 @@ INSTALLED_APPS = [
     "reviews",
 ]
 
+AUTH_USER_MODEL = 'reviews.CustomUser'  # Кастомная модель по умолчанию
+
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
