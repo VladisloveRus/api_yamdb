@@ -34,7 +34,7 @@ def create_jwt_token(request):
         CustomUser,
         username=request.data['username'],
     )
-    if user.confirmation_code != request.data['confirmation_code']:
+    if user.confirmation_code != request.data.get('confirmation_code'):
         raise ValidationError(code=400)
     return Response(get_jwt_token(user), status=status.HTTP_200_OK)
 
