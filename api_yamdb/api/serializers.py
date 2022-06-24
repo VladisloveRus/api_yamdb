@@ -1,9 +1,43 @@
 from rest_framework import serializers
+from rest_framework.validators import UniqueTogetherValidator
+from django.utils.crypto import get_random_string
 
-from reviews.models import Category, Genre, Title
+from reviews.models import Category, CustomUser, Genre, Title
+
+
+class UserSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = CustomUser
+        fields = (
+            "username",
+            "email",
+            "first_name",
+            "last_name",
+            "bio",
+            "role"
+        )
+
+    validators = [
+        UniqueTogetherValidator(
+            queryset=CustomUser.objects.all(),
+            fields=["username", "email"]
+        )
+    ]
+
+    def create(self, validated_data):
+        confirmation_code = get_random_string(length=32)  # generate code
+        user = CustomUser(
+            username=validated_data["username"],
+            email=validated_data["email"],
+            confirmation_code=confirmation_code
+        )
+        user.save()
+        return validated_data
 
 
 class GenreSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = Genre
         fields = (
@@ -13,6 +47,7 @@ class GenreSerializer(serializers.ModelSerializer):
 
 
 class CategorySerializer(serializers.ModelSerializer):
+
     class Meta:
         model = Category
         fields = (
