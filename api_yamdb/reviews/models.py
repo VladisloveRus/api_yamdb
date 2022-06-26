@@ -14,9 +14,16 @@ class CustomUser(AbstractUser):
         ("admin", "Администратор"),
     )
 
+    confirmation_code = models.CharField(
+        blank=False,
+        null=True,
+        max_length=32
+    )
     bio = models.TextField(blank=True, null=True)
     role = models.CharField(
-        choices=ROLE_CHOICES, default="user", max_length=255
+        choices=ROLE_CHOICES,
+        default="user",
+        max_length=255
     )
 
     def __str__(self):
@@ -102,7 +109,7 @@ class Title(models.Model):
 class Review(models.Model):
     author = models.ForeignKey(
         CustomUser, on_delete=models.CASCADE,
-        related_name="reviews", 
+        related_name="reviews",
         verbose_name="Автор отзыва"
     )
     title = models.ForeignKey(
@@ -137,7 +144,7 @@ class Review(models.Model):
 class Comment(models.Model):
     author = models.ForeignKey(
         CustomUser, on_delete=models.CASCADE,
-        related_name="comments", 
+        related_name="comments",
         verbose_name="Автор комментария"
     )
     review = models.ForeignKey(
