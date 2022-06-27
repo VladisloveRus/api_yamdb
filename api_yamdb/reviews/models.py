@@ -14,20 +14,26 @@ class CustomUser(AbstractUser):
         ("admin", "Администратор"),
     )
 
-    confirmation_code = models.CharField(
-        blank=False,
-        null=True,
-        max_length=32
-    )
+    confirmation_code = models.CharField(blank=False, null=True, max_length=32)
     bio = models.TextField(blank=True, null=True)
     role = models.CharField(
-        choices=ROLE_CHOICES,
-        default="user",
-        max_length=255
+        choices=ROLE_CHOICES, default="user", max_length=255
     )
 
     def __str__(self):
         return self.username
+
+    @property
+    def is_user(self):
+        return self.role == "user"
+
+    @property
+    def is_moderator(self):
+        return self.role == "moderator"
+
+    @property
+    def is_admin(self):
+        return self.role == "admin"
 
 
 class Category(models.Model):
@@ -108,29 +114,27 @@ class Title(models.Model):
 
 class Review(models.Model):
     author = models.ForeignKey(
-        CustomUser, on_delete=models.CASCADE,
+        CustomUser,
+        on_delete=models.CASCADE,
         related_name="reviews",
-        verbose_name="Автор отзыва"
+        verbose_name="Автор отзыва",
     )
     title = models.ForeignKey(
-        Title, on_delete=models.CASCADE,
+        Title,
+        on_delete=models.CASCADE,
         related_name="reviews",
-        verbose_name="Произведение"
+        verbose_name="Произведение",
     )
     text = models.TextField(
         blank=True,
         verbose_name="Текст отзыва",
     )
     score = models.IntegerField(
-        validators=[
-            MaxValueValidator(10),
-            MinValueValidator(1)
-        ],
-        verbose_name="Оценка"
+        validators=[MaxValueValidator(10), MinValueValidator(1)],
+        verbose_name="Оценка",
     )
     pub_date = models.DateTimeField(
-        auto_now_add=True,
-        verbose_name="Дата добавления"
+        auto_now_add=True, verbose_name="Дата добавления"
     )
 
     class Meta:
@@ -143,22 +147,23 @@ class Review(models.Model):
 
 class Comment(models.Model):
     author = models.ForeignKey(
-        CustomUser, on_delete=models.CASCADE,
+        CustomUser,
+        on_delete=models.CASCADE,
         related_name="comments",
-        verbose_name="Автор комментария"
+        verbose_name="Автор комментария",
     )
     review = models.ForeignKey(
-        Review, on_delete=models.CASCADE,
+        Review,
+        on_delete=models.CASCADE,
         related_name="comments",
-        verbose_name="Отзыв"
+        verbose_name="Отзыв",
     )
     text = models.TextField(
         blank=True,
         verbose_name="Текст комментария",
     )
     pub_date = models.DateTimeField(
-        auto_now_add=True,
-        verbose_name="Дата добавления"
+        auto_now_add=True, verbose_name="Дата добавления"
     )
 
     class Meta:
