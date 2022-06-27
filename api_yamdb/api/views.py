@@ -6,7 +6,6 @@ from rest_framework.generics import CreateAPIView
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.exceptions import ParseError, ValidationError
 from rest_framework.permissions import AllowAny
-# from rest_framework.authentication import
 from django_filters.rest_framework import DjangoFilterBackend
 
 from reviews.models import Category, CustomUser, Genre, Title
