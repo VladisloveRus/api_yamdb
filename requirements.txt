@@ -30,3 +30,6 @@ typed-ast==1.5.4
 typing_extensions==4.2.0
 urllib3==1.26.9
 zipp==3.8.0
+
+pip~=22.1.2
+setuptools~=47.1.0

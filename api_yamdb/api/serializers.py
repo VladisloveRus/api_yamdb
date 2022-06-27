@@ -1,6 +1,8 @@
+from django.conf import settings
+from django.core.mail import send_mail
+from django.utils.crypto import get_random_string
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
-from django.utils.crypto import get_random_string
 
 from reviews.models import Category, CustomUser, Genre, Title
 
@@ -27,10 +29,18 @@ class UserSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         confirmation_code = get_random_string(length=32)  # generate code
+        username = validated_data["username"]
+        email = str(validated_data["email"])
         user = CustomUser(
-            username=validated_data["username"],
-            email=validated_data["email"],
+            username=username,
+            email=email,
             confirmation_code=confirmation_code
+        )
+        send_mail(
+            "Код подтверждения для регистрации YamDB",
+            f"{username} Ваш код подтверждения: {confirmation_code}",
+            from_email=settings.EMAIL_HOST_USER,
+            recipient_list=(email,),
         )
         user.save()
         return validated_data
