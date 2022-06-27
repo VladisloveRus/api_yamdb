@@ -17,6 +17,7 @@ from .serializers import (
 )
 from .mixins import ListCreateDestroyViewSet
 from .tokens import get_jwt_token
+from .permissions import IsAdminOrReadOnly
 
 
 class SignupViewSet(CreateAPIView):
@@ -43,6 +44,7 @@ class CategoryViewSet(ListCreateDestroyViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     pagination_class = LimitOffsetPagination
+    permission_classes = (IsAdminOrReadOnly,)
     search_fields = ("name",)
     lookup_field = "slug"
 
@@ -51,6 +53,7 @@ class GenreViewSet(ListCreateDestroyViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
     pagination_class = LimitOffsetPagination
+    permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ("name",)
     lookup_field = "slug"
@@ -60,6 +63,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
     pagination_class = LimitOffsetPagination
+    permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
 
     def get_serializer_class(self):
