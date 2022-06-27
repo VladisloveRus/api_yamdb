@@ -9,12 +9,6 @@ from reviews.models import Category, CustomUser, Genre, Title
 
 
 class UserSerializer(serializers.ModelSerializer):
-    # current_user = serializers.SerializerMethodField("_user")
-
-    def _user(self, obj):
-        request = self.context.get('request', None)
-        if request:
-            return request.user
 
     class Meta:
         model = CustomUser
@@ -25,7 +19,6 @@ class UserSerializer(serializers.ModelSerializer):
             "last_name",
             "bio",
             "role",
-            # "current_user"
         )
 
     validators = [
