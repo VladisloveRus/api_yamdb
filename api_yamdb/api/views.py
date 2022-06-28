@@ -8,17 +8,19 @@ from rest_framework.exceptions import ParseError, ValidationError
 from rest_framework.permissions import AllowAny
 from django_filters.rest_framework import DjangoFilterBackend
 
-from reviews.models import Category, CustomUser, Genre, Title
+from reviews.models import Category, CustomUser, Genre, Review, Title
 from .serializers import (
     CategorySerializer,
+    CommentSerializer,
     GenreSerializer,
+    ReviewSerializer,
     TitleCreateSerializer,
     TitleSerializer,
     UserSerializer
 )
 from .mixins import ListCreateDestroyViewSet
 from .tokens import get_jwt_token
-from .permissions import IsAdminOrReadOnly
+from .permissions import IsAdminOrReadOnly, IsAuthorOrAdminOrReadOnly
 
 
 class SignupViewSet(CreateAPIView):
@@ -83,3 +85,37 @@ class TitleViewSet(viewsets.ModelViewSet):
         if self.request.method in ('POST', 'PATCH'):
             return TitleCreateSerializer
         return TitleSerializer
+
+
+class ReviewViewSet(viewsets.ModelViewSet):
+    serializer_class = ReviewSerializer
+    pagination_class = LimitOffsetPagination
+    permission_classes = (IsAuthorOrAdminOrReadOnly,)
+
+    def get_queryset(self):
+        title_id = self.kwargs.get('title_id')
+        new_queryset = Review.objects.filter(title=title_id)
+        return new_queryset
+
+    def perform_create(self, serializer):
+        serializer.save(
+            author=self.request.user,
+            title=Title.objects.get(id=self.kwargs.get('title_id')),
+        )
+
+
+class CommentViewSet(viewsets.ModelViewSet):
+    serializer_class = CommentSerializer
+    pagination_class = LimitOffsetPagination
+    permission_classes = (IsAuthorOrAdminOrReadOnly,)
+
+    def get_queryset(self):
+        review_id = self.kwargs.get('review_id')
+        new_queryset = Review.objects.filter(id=review_id)
+        return new_queryset
+
+    def perform_create(self, serializer):
+        serializer.save(
+            author=self.request.user,
+            review=Review.objects.get(id=self.kwargs.get('review_id')),
+        )
