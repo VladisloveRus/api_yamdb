@@ -13,7 +13,7 @@ class CustomUser(AbstractUser):
         ("moderator", "Модератор"),
         ("admin", "Администратор"),
     )
-
+    email = models.EmailField(unique=True)
     confirmation_code = models.CharField(blank=False, null=True, max_length=32)
     bio = models.TextField(blank=True, null=True)
     role = models.CharField(
