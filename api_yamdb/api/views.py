@@ -18,8 +18,9 @@ from .serializers import (
 )
 from .mixins import ListCreateDestroyViewSet
 from .tokens import get_jwt_token
-from .permissions import IsAdminOrReadOnly
+from .permissions import IsAdminOrReadOnly, IsAdminOrSuperuser
 from .filters import TitleFilter
+
 
 
 class SignupViewSet(CreateAPIView):
@@ -51,7 +52,13 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = CustomUser.objects.all()
     serializer_class = UserSerializer
     pagination_class = LimitOffsetPagination
-    search_fields = ("username",)
+    permission_classes = (IsAdminOrSuperuser,)
+    lookup_field = "username"
+
+    def perform_create(self, serializer):
+        if not serializer.validated_data.get("role"):
+            serializer.validated_data["role"] = "user"
+        return serializer.save()
 
 
 class CategoryViewSet(ListCreateDestroyViewSet):
