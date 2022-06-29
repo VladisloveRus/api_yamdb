@@ -2,14 +2,13 @@ from django.conf import settings
 from django.core.mail import send_mail
 from django.utils.crypto import get_random_string
 from rest_framework import serializers
-from rest_framework.validators import UniqueTogetherValidator
+from rest_framework.validators import UniqueTogetherValidator, UniqueValidator
 from rest_framework.exceptions import ValidationError
 
 from reviews.models import Category, Comment, CustomUser, Genre, Review, Title
 
 
 class UserSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = CustomUser
         fields = (
@@ -23,8 +22,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     validators = [
         UniqueTogetherValidator(
-            queryset=CustomUser.objects.all(),
-            fields=["username", "email"]
+            queryset=CustomUser.objects.all(), fields=["username", "email"]
         )
     ]
 
@@ -37,7 +35,7 @@ class UserSerializer(serializers.ModelSerializer):
         user = CustomUser(
             username=username,
             email=email,
-            confirmation_code=confirmation_code
+            confirmation_code=confirmation_code,
         )
         current_user_admin = False
         request = self.context.get("request")
@@ -55,7 +53,6 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class GenreSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = Genre
         fields = (
@@ -65,7 +62,6 @@ class GenreSerializer(serializers.ModelSerializer):
 
 
 class CategorySerializer(serializers.ModelSerializer):
-
     class Meta:
         model = Category
         fields = (
@@ -76,6 +72,7 @@ class CategorySerializer(serializers.ModelSerializer):
 
 class TitleSerializer(serializers.ModelSerializer):
     """Сериализатор для GET."""
+
     category = CategorySerializer(read_only=True)
     genre = GenreSerializer(many=True, read_only=True)
 
@@ -85,6 +82,7 @@ class TitleSerializer(serializers.ModelSerializer):
             "id",
             "name",
             "year",
+            "rating",
             "description",
             "genre",
             "category",
@@ -94,6 +92,7 @@ class TitleSerializer(serializers.ModelSerializer):
 
 class TitleCreateSerializer(serializers.ModelSerializer):
     """Сериализатор для POST, PATH."""
+
     category = serializers.SlugRelatedField(
         slug_field="slug", queryset=Category.objects.all()
     )
@@ -115,23 +114,36 @@ class TitleCreateSerializer(serializers.ModelSerializer):
 
 class ReviewSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
-        read_only=True, slug_field="username"
+        read_only=True,
+        slug_field="username",
+        default=serializers.CurrentUserDefault(),
     )
-    title = serializers.PrimaryKeyRelatedField(read_only=True)
+    title = serializers.HiddenField(
+        default=serializers.PrimaryKeyRelatedField(read_only=True),
+    )
 
     class Meta:
         model = Review
-        fields = ("id", "text", "author", "score", "pub_date")
-        read_only_fields = ("id", "author", "pub_date")
+        validators = [
+            UniqueTogetherValidator(
+                queryset=Review.objects.all(), fields=["author", "title"]
+            )
+        ]
+        fields = ("id", "text", "author", "score", "pub_date", "title")
+        read_only_fields = ("id", "author", "pub_date", "title")
 
 
 class CommentSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
-        read_only=True, slug_field="username"
+        read_only=True,
+        slug_field="username",
+        default=serializers.CurrentUserDefault(),
     )
-    review = serializers.PrimaryKeyRelatedField(read_only=True)
+    review = serializers.HiddenField(
+        default=serializers.PrimaryKeyRelatedField(read_only=True),
+    )
 
     class Meta:
         model = Comment
-        fields = ("id", "text", "author", "pub_date")
-        read_only_fields = ("id", "author", "pub_date")
+        fields = ("id", "text", "author", "pub_date", "review")
+        read_only_fields = ("id", "author", "pub_date", "review")

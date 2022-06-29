@@ -103,6 +103,11 @@ class Title(models.Model):
         related_name="titles",
         verbose_name="Категория произведения",
     )
+    rating = models.IntegerField(
+        blank=True,
+        null=True,
+        verbose_name="Рейтинг произведения",
+    )
 
     class Meta:
         verbose_name = "Произведение"
@@ -126,7 +131,6 @@ class Review(models.Model):
         verbose_name="Произведение",
     )
     text = models.TextField(
-        blank=True,
         verbose_name="Текст отзыва",
     )
     score = models.IntegerField(
@@ -138,6 +142,12 @@ class Review(models.Model):
     )
 
     class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                name="unique_author_title",
+                fields=["author", "title"],
+            )
+        ]
         verbose_name = "Отзыв"
         verbose_name_plural = "Отзывы"
 
@@ -159,7 +169,6 @@ class Comment(models.Model):
         verbose_name="Отзыв",
     )
     text = models.TextField(
-        blank=True,
         verbose_name="Текст комментария",
     )
     pub_date = models.DateTimeField(
