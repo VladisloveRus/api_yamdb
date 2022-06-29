@@ -14,11 +14,13 @@ from .serializers import (
     GenreSerializer,
     TitleCreateSerializer,
     TitleSerializer,
-    UserSerializer
+    UserSerializer,
 )
 from .mixins import ListCreateDestroyViewSet
 from .tokens import get_jwt_token
 from .permissions import IsAdminOrReadOnly, IsAdminOrSuperuser
+from .filters import TitleFilter
+
 
 
 class SignupViewSet(CreateAPIView):
@@ -31,17 +33,17 @@ class SignupViewSet(CreateAPIView):
             return Response(request.data, status=status.HTTP_200_OK)
 
 
-@api_view(['POST'])
+@api_view(["POST"])
 @permission_classes([AllowAny])
 def create_jwt_token(request):
-    username = request.data.get('username')
+    username = request.data.get("username")
     if not request.data or not username:
         raise ParseError
     user = get_object_or_404(
         CustomUser,
         username=username,
     )
-    if user.confirmation_code != request.data.get('confirmation_code'):
+    if user.confirmation_code != request.data.get("confirmation_code"):
         raise ValidationError(code=400)
     return Response(get_jwt_token(user), status=status.HTTP_200_OK)
 
@@ -63,6 +65,7 @@ class CategoryViewSet(ListCreateDestroyViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     pagination_class = LimitOffsetPagination
+    filter_backends = (filters.SearchFilter,)
     permission_classes = (IsAdminOrReadOnly,)
     search_fields = ("name",)
     lookup_field = "slug"
@@ -84,8 +87,9 @@ class TitleViewSet(viewsets.ModelViewSet):
     pagination_class = LimitOffsetPagination
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
+    filterset_class = TitleFilter
 
     def get_serializer_class(self):
-        if self.request.method in ('POST', 'PATCH'):
+        if self.request.method in ("POST", "PATCH"):
             return TitleCreateSerializer
         return TitleSerializer
