@@ -31,19 +31,21 @@ class UserSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         confirmation_code = get_random_string(length=32)  # generate code
         username = validated_data["username"]
+        role = validated_data.get("role", "user")  # default - user
         if username == "me":
             raise ValidationError(code=400)
         email = str(validated_data["email"])
         user = CustomUser(
             username=username,
             email=email,
-            confirmation_code=confirmation_code
+            confirmation_code=confirmation_code,
+            role=role
         )
         current_user_admin = False
         request = self.context.get("request")
         if request and hasattr(request, "user"):
             current_user_admin = request.user.is_admin
-        if not current_user_admin:
+        if not current_user_admin:  # отправка, если не админ
             send_mail(
                 "Код подтверждения для регистрации YamDB",
                 f"{username} Ваш код подтверждения: {confirmation_code}",

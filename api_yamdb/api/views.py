@@ -18,9 +18,12 @@ from .serializers import (
 )
 from .mixins import ListCreateDestroyViewSet
 from .tokens import get_jwt_token
-from .permissions import IsAdminOrReadOnly, IsAdminOrSuperuser
+from .permissions import (
+    IsAdminOrReadOnly,
+    IsAdminOrSuperuser,
+    ProfilePermission
+)
 from .filters import TitleFilter
-
 
 
 class SignupViewSet(CreateAPIView):
@@ -52,13 +55,37 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = CustomUser.objects.all()
     serializer_class = UserSerializer
     pagination_class = LimitOffsetPagination
-    permission_classes = (IsAdminOrSuperuser,)
     lookup_field = "username"
+
+    def get_permissions(self):
+        if self.kwargs.get("username") == "me":
+            return (ProfilePermission(),)
+        else:
+            return (IsAdminOrSuperuser(),)
 
     def perform_create(self, serializer):
         if not serializer.validated_data.get("role"):
             serializer.validated_data["role"] = "user"
         return serializer.save()
+
+    def get_object(self):
+        if self.kwargs.get("username") == "me":
+            user = CustomUser.objects.get(pk=self.request.user.pk)
+            return self.serializer_class(user).data
+        return super(UserViewSet, self).get_object()
+
+    def partial_update(self, request, *args, **kwargs):
+        if self.kwargs.get("username") == "me":
+            user = CustomUser.objects.get(pk=self.request.user.pk)
+            serializer = self.serializer_class(
+                user, data=request.data, partial=True
+            )
+            if serializer.is_valid(raise_exception=True):
+                if request.user.is_user:  # user не может изменить роль
+                    serializer.validated_data["role"] = "user"
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_200_OK)
+        return super(UserViewSet, self).partial_update(request)
 
 
 class CategoryViewSet(ListCreateDestroyViewSet):
