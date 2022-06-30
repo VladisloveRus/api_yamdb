@@ -40,6 +40,7 @@ class Category(models.Model):
     name = models.CharField(
         max_length=256,
         verbose_name="Название категории",
+        db_index=True,
     )
     slug = models.SlugField(
         max_length=50,
@@ -59,6 +60,7 @@ class Genre(models.Model):
     name = models.CharField(
         max_length=256,
         verbose_name="Название жанра",
+        db_index=True,
     )
     slug = models.SlugField(
         max_length=50,
@@ -82,6 +84,7 @@ class Title(models.Model):
     year = models.IntegerField(
         validators=[validate_year],
         verbose_name="Год произведения",
+        db_index=True,
     )
     description = models.TextField(
         max_length=200,
@@ -108,6 +111,18 @@ class Title(models.Model):
         verbose_name = "Произведение"
         verbose_name_plural = "Произведения"
 
+    def __str__(self):
+        return self.name
+
+class GenreTitle(models.Model):
+    title = models.ForeignKey(
+        Title,
+        on_delete=models.CASCADE,
+    )
+    genre = models.ForeignKey(
+        Genre,
+        on_delete=models.CASCADE,
+    )
     def __str__(self):
         return self.name
 
@@ -140,6 +155,12 @@ class Review(models.Model):
     class Meta:
         verbose_name = "Отзыв"
         verbose_name_plural = "Отзывы"
+        constraints = [
+            models.UniqueConstraint(
+                fields=['title', 'author'],
+                name='unique_review'
+            ),
+        ]
 
     def __str__(self):
         return self.text
