@@ -28,10 +28,14 @@ pip3 install -r requirements.txt
 python3 manage.py migrate
 python3 manage.py runserver
 ```
-Подробная документация доступна по ссылке:
+После запуска сервера Вы можете:
+- Посмотреть подробную документацию API
 ```sh
-python3 manage.py runserver
 http://127.0.0.1:8000/redoc/
+```
+- Импортировать тестовые данные командой
+```sh
+python manage.py import_csv
 ```
 
 
