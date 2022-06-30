@@ -9,7 +9,6 @@ from reviews.models import Category, CustomUser, Genre, Title
 
 
 class UserSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = CustomUser
         fields = (
@@ -23,8 +22,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     validators = [
         UniqueTogetherValidator(
-            queryset=CustomUser.objects.all(),
-            fields=["username", "email"]
+            queryset=CustomUser.objects.all(), fields=["username", "email"]
         )
     ]
 
@@ -57,7 +55,6 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class GenreSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = Genre
         fields = (
@@ -67,7 +64,6 @@ class GenreSerializer(serializers.ModelSerializer):
 
 
 class CategorySerializer(serializers.ModelSerializer):
-
     class Meta:
         model = Category
         fields = (
@@ -78,6 +74,7 @@ class CategorySerializer(serializers.ModelSerializer):
 
 class TitleSerializer(serializers.ModelSerializer):
     """Сериализатор для GET."""
+
     category = CategorySerializer(read_only=True)
     genre = GenreSerializer(many=True, read_only=True)
 
@@ -96,6 +93,7 @@ class TitleSerializer(serializers.ModelSerializer):
 
 class TitleCreateSerializer(serializers.ModelSerializer):
     """Сериализатор для POST, PATH."""
+
     category = serializers.SlugRelatedField(
         slug_field="slug", queryset=Category.objects.all()
     )
