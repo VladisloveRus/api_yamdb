@@ -14,15 +14,13 @@ from reviews.models import (
 )
 
 
-PATH = {
-    Category: "category.csv",
-    Title: "titles.csv",
-    Genre: "genre.csv",
-    GenreTitle: "genre_title.csv",
-    Review: "review.csv",
-    Comment: "comments.csv",
-
-}
+MODELS = (
+    Category,
+    Title,
+    Genre,
+    GenreTitle,
+    Comment,
+)
 
 
 class Command(BaseCommand):
@@ -30,7 +28,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         if Title.objects.count() > 1:
-            for model, path in PATH.items():
+            for model in MODELS:
                 model.objects.all().delete()
 
         with open("static/data/category.csv", "r") as csv_file:
