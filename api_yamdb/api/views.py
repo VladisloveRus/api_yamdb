@@ -1,4 +1,6 @@
+from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404
+from django.db.models import Avg
 from rest_framework import filters, status, viewsets
 from rest_framework.response import Response
 from rest_framework.pagination import LimitOffsetPagination
@@ -8,10 +10,12 @@ from rest_framework.exceptions import ParseError, ValidationError
 from rest_framework.permissions import AllowAny
 from django_filters.rest_framework import DjangoFilterBackend
 
-from reviews.models import Category, CustomUser, Genre, Title
+from reviews.models import Category, Comment, CustomUser, Genre, Review, Title
 from .serializers import (
     CategorySerializer,
+    CommentSerializer,
     GenreSerializer,
+    ReviewSerializer,
     TitleCreateSerializer,
     TitleSerializer,
     UserSerializer,
@@ -21,7 +25,10 @@ from .tokens import get_jwt_token
 from .permissions import (
     IsAdminOrReadOnly,
     IsAdminOrSuperuser,
-    ProfilePermission
+    ProfilePermission,
+    IsAdminOrReadOnly,
+    IsAuthorOrAdminOrModerator,
+    IsAuthorizedOrReadOnly,
 )
 from .filters import TitleFilter
 
@@ -120,3 +127,94 @@ class TitleViewSet(viewsets.ModelViewSet):
         if self.request.method in ("POST", "PATCH"):
             return TitleCreateSerializer
         return TitleSerializer
+
+
+class ReviewViewSet(viewsets.ModelViewSet):
+    serializer_class = ReviewSerializer
+    pagination_class = LimitOffsetPagination
+    permission_classes = (IsAuthorizedOrReadOnly,)
+
+    def get_permissions(self):
+        if (self.action == "update") or (self.action == "destroy"):
+            permission_classes = [IsAuthorOrAdminOrModerator]
+        else:
+            permission_classes = [IsAuthorizedOrReadOnly]
+        return [permission() for permission in permission_classes]
+
+    def get_queryset(self):
+        title_id = self.kwargs.get("title_id")
+        new_queryset = Review.objects.filter(title=title_id)
+        return new_queryset
+
+    def perform_create(self, serializer):
+        title = get_object_or_404(Title, id=self.kwargs.get("title_id"))
+        if Review.objects.filter(
+            title=title, author=self.request.user
+        ).exists():
+            raise ValidationError(code=400)
+        serializer.save(
+            author=self.request.user,
+            title=title,
+        )
+        rating = Review.objects.filter(title=title).aggregate(Avg("score"))
+        title.rating = rating["score__avg"]
+        title.save(update_fields=["rating"])
+
+    def perform_update(self, serializer):
+        if serializer.instance.author != self.request.user:
+            raise PermissionDenied("Изменение чужих постов запрещено!")
+        serializer.save()
+        title = get_object_or_404(Title, pk=self.kwargs.get("title_id"))
+        rating = Review.objects.filter(title=title).aggregate(Avg("score"))
+        title.rating = rating["score__avg"]
+        title.save(update_fields=["rating"])
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def perform_destroy(self, instance):
+        instance.delete()
+        title = get_object_or_404(Title, pk=self.kwargs.get("title_id"))
+        rating = Review.objects.filter(title=title).aggregate(Avg("score"))
+        title.rating = rating["score__avg"]
+        title.save(update_fields=["rating"])
+
+
+class CommentViewSet(viewsets.ModelViewSet):
+    serializer_class = CommentSerializer
+    pagination_class = LimitOffsetPagination
+    permission_classes = (IsAuthorizedOrReadOnly,)
+
+    def get_permissions(self):
+        if (self.action == "update") or (self.action == "destroy"):
+            permission_classes = [IsAuthorOrAdminOrModerator]
+        else:
+            permission_classes = [IsAuthorizedOrReadOnly]
+        return [permission() for permission in permission_classes]
+
+    def get_queryset(self):
+        review_id = self.kwargs.get("review_id")
+        new_queryset = Comment.objects.filter(review=review_id)
+        return new_queryset
+
+    def perform_create(self, serializer):
+        review = get_object_or_404(Review, pk=self.kwargs.get("review_id"))
+        serializer.save(
+            author=self.request.user,
+            review=review,
+        )
+
+    def perform_update(self, serializer):
+        if serializer.instance.author != self.request.user:
+            raise PermissionDenied("Изменение чужих постов запрещено!")
+        serializer.save()
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def perform_destroy(self, instance):
+        instance.delete()

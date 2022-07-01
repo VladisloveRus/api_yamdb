@@ -14,7 +14,9 @@ class CustomUser(AbstractUser):
         ("admin", "Администратор"),
     )
     email = models.EmailField(unique=True)
-    confirmation_code = models.CharField(blank=False, null=True, max_length=32)
+    confirmation_code = models.CharField(
+        blank=False, null=True, max_length=32
+    )
     bio = models.TextField(blank=True, null=True)
     role = models.CharField(
         choices=ROLE_CHOICES, default="user", max_length=255
@@ -106,6 +108,11 @@ class Title(models.Model):
         related_name="titles",
         verbose_name="Категория произведения",
     )
+    rating = models.IntegerField(
+        blank=True,
+        null=True,
+        verbose_name="Рейтинг произведения",
+    )
 
     class Meta:
         verbose_name = "Произведение"
@@ -113,6 +120,7 @@ class Title(models.Model):
 
     def __str__(self):
         return self.name
+
 
 class GenreTitle(models.Model):
     title = models.ForeignKey(
@@ -123,6 +131,7 @@ class GenreTitle(models.Model):
         Genre,
         on_delete=models.CASCADE,
     )
+
     def __str__(self):
         return self.name
 
@@ -141,7 +150,6 @@ class Review(models.Model):
         verbose_name="Произведение",
     )
     text = models.TextField(
-        blank=True,
         verbose_name="Текст отзыва",
     )
     score = models.IntegerField(
@@ -153,14 +161,14 @@ class Review(models.Model):
     )
 
     class Meta:
-        verbose_name = "Отзыв"
-        verbose_name_plural = "Отзывы"
         constraints = [
             models.UniqueConstraint(
-                fields=['title', 'author'],
-                name='unique_review'
-            ),
+                name="unique_author_title",
+                fields=["author", "title"],
+            )
         ]
+        verbose_name = "Отзыв"
+        verbose_name_plural = "Отзывы"
 
     def __str__(self):
         return self.text
@@ -180,7 +188,6 @@ class Comment(models.Model):
         verbose_name="Отзыв",
     )
     text = models.TextField(
-        blank=True,
         verbose_name="Текст комментария",
     )
     pub_date = models.DateTimeField(
