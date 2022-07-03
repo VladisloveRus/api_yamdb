@@ -16,6 +16,10 @@ class TitleFilter(filter.FilterSet):
         field_name='genre__slug',
         lookup_expr='icontains'
     )
+    year = filter.CharFilter(
+        field_name='year',
+        lookup_expr='exact',
+    )
 
     class Meta:
         model = Title
