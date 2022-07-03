@@ -5,7 +5,7 @@ from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 from rest_framework.exceptions import ValidationError
 
-from reviews.models import Category, CustomUser, Genre, Title
+from reviews.models import Category, Comment, CustomUser, Genre, Review, Title
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -84,6 +84,7 @@ class TitleSerializer(serializers.ModelSerializer):
             "id",
             "name",
             "year",
+            "rating",
             "description",
             "genre",
             "category",
@@ -111,3 +112,40 @@ class TitleCreateSerializer(serializers.ModelSerializer):
             "genre",
             "category",
         )
+
+
+class ReviewSerializer(serializers.ModelSerializer):
+    author = serializers.SlugRelatedField(
+        read_only=True,
+        slug_field="username",
+        default=serializers.CurrentUserDefault(),
+    )
+    title = serializers.HiddenField(
+        default=serializers.PrimaryKeyRelatedField(read_only=True),
+    )
+
+    class Meta:
+        model = Review
+        validators = [
+            UniqueTogetherValidator(
+                queryset=Review.objects.all(), fields=["author", "title"]
+            )
+        ]
+        fields = ("id", "text", "author", "score", "pub_date", "title")
+        read_only_fields = ("id", "author", "pub_date", "title")
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    author = serializers.SlugRelatedField(
+        read_only=True,
+        slug_field="username",
+        default=serializers.CurrentUserDefault(),
+    )
+    review = serializers.HiddenField(
+        default=serializers.PrimaryKeyRelatedField(read_only=True),
+    )
+
+    class Meta:
+        model = Comment
+        fields = ("id", "text", "author", "pub_date", "review")
+        read_only_fields = ("id", "author", "pub_date", "review")

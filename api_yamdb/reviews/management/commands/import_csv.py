@@ -105,3 +105,4 @@ class Command(BaseCommand):
                 )
 
         self.stdout.write(self.style.SUCCESS("Загрузка успешно завершена!"))
+
