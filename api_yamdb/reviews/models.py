@@ -39,15 +39,13 @@ class CustomUser(AbstractUser):
 
 
 class Category(models.Model):
-    name = models.CharField(
+    name = models.CharField("Название категории",
         max_length=256,
-        verbose_name="Название категории",
         db_index=True,
     )
     slug = models.SlugField(
-        max_length=50,
+        "Slug",
         unique=True,
-        verbose_name="Slug",
     )
 
     class Meta:
@@ -60,14 +58,13 @@ class Category(models.Model):
 
 class Genre(models.Model):
     name = models.CharField(
+        "Название жанра",
         max_length=256,
-        verbose_name="Название жанра",
         db_index=True,
     )
     slug = models.SlugField(
-        max_length=50,
+        "Slug",
         unique=True,
-        verbose_name="Slug",
     )
 
     class Meta:
@@ -80,19 +77,19 @@ class Genre(models.Model):
 
 class Title(models.Model):
     name = models.CharField(
+        "Название произведения",
         max_length=256,
-        verbose_name="Название произведения",
     )
     year = models.IntegerField(
+        "Год произведения",
         validators=[validate_year],
-        verbose_name="Год произведения",
         db_index=True,
     )
     description = models.TextField(
+        "Описание произведения",
         max_length=200,
         blank=True,
         null=True,
-        verbose_name="Описание произведения",
     )
     genre = models.ManyToManyField(
         Genre,
@@ -109,9 +106,9 @@ class Title(models.Model):
         verbose_name="Категория произведения",
     )
     rating = models.IntegerField(
+        "Рейтинг произведения",
         blank=True,
         null=True,
-        verbose_name="Рейтинг произведения",
     )
 
     class Meta:
@@ -150,21 +147,22 @@ class Review(models.Model):
         verbose_name="Произведение",
     )
     text = models.TextField(
-        verbose_name="Текст отзыва",
+        "Текст отзыва",
     )
     score = models.IntegerField(
+        "Оценка",
         validators=[MaxValueValidator(10), MinValueValidator(1)],
-        verbose_name="Оценка",
     )
     pub_date = models.DateTimeField(
-        auto_now_add=True, verbose_name="Дата добавления"
+        "Дата добавления",
+        auto_now_add=True,
     )
 
     class Meta:
         constraints = [
             models.UniqueConstraint(
                 name="unique_author_title",
-                fields=["author", "title"],
+                fields=("author", "title",),
             )
         ]
         verbose_name = "Отзыв"
@@ -188,10 +186,11 @@ class Comment(models.Model):
         verbose_name="Отзыв",
     )
     text = models.TextField(
-        verbose_name="Текст комментария",
+        "Текст комментария",
     )
     pub_date = models.DateTimeField(
-        auto_now_add=True, verbose_name="Дата добавления"
+        "Дата добавления",
+        auto_now_add=True,
     )
 
     class Meta:
