@@ -55,7 +55,8 @@ class CustomUser(AbstractUser):
 
 
 class Category(models.Model):
-    name = models.CharField("Название категории",
+    name = models.CharField(
+        "Название категории",
         max_length=256,
         db_index=True,
     )
